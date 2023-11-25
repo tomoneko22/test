@@ -1,0 +1,93 @@
+-- こっち見んな
+
+
+local Players = game:GetService("Players")
+local teleportingPlayer = Players.LocalPlayer
+local teleportEnabled = false
+local targetPlayerName = ""
+ 
+local screenGui = Instance.new("ScreenGui")
+screenGui.Parent = teleportingPlayer:WaitForChild("PlayerGui")
+ 
+local button = Instance.new("TextButton")
+button.Parent = screenGui
+button.Size = UDim2.new(0, 150, 0, 65)
+button.Position = UDim2.new(0.5, -75, 0.1, 0)
+button.Text = "悪魔所属友猫作"
+button.TextSize = 22
+button.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+ 
+local playerListFrame = Instance.new("ScrollingFrame")
+playerListFrame.Parent = screenGui
+playerListFrame.Size = UDim2.new(0, 150, 0, 200)
+playerListFrame.Position = UDim2.new(0.5, 75, 0.1, 0)
+ 
+local function updatePlayerList()
+    for _, child in ipairs(playerListFrame:GetChildren()) do
+        child:Destroy()
+    end
+    for i, player in ipairs(Players:GetPlayers()) do
+        local button = Instance.new("TextButton")
+        button.Parent = playerListFrame
+        button.Size = UDim2.new(1, 0, 0, 30)
+        button.Position = UDim2.new(0, 0, (i - 1) / #Players:GetPlayers(), 0)
+        button.Text = player.Name
+        button.MouseButton1Click:Connect(function()
+            targetPlayerName = player.Name
+        end)
+    end
+end
+ 
+updatePlayerList()
+Players.PlayerAdded:Connect(updatePlayerList)
+Players.PlayerRemoving:Connect(updatePlayerList)
+ 
+button.MouseButton1Click:Connect(function()
+    teleportEnabled = not teleportEnabled
+    if not teleportEnabled then
+        targetPlayerName = ""
+    end
+    button.Text = teleportEnabled and "オン" or "オフ"
+    button.BackgroundColor3 = teleportEnabled and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(255, 0, 0)
+end)
+
+local closeButton = Instance.new("TextButton")
+closeButton.Parent = screenGui
+closeButton.Size = UDim2.new(0, 20, 0, 20)
+closeButton.Position = UDim2.new(1, -40, 0, 10)
+closeButton.Text = "閉じる"
+closeButton.TextSize = 10
+closeButton.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+
+local isGuiVisible = true
+closeButton.MouseButton1Click:Connect(function()
+    isGuiVisible = not isGuiVisible
+    button.Visible = isGuiVisible
+    playerListFrame.Visible = isGuiVisible
+end)
+
+teleportingPlayer.CharacterAdded:Connect(function(character)
+    character:WaitForChild('Humanoid').Died:Connect(function()
+        teleportEnabled=false;
+        button.Text="オフ";
+        button.BackgroundColor3=Color3.fromRGB(255,0,0);
+    end)
+end)
+
+while wait(0.1) do
+    if teleportEnabled then 
+        local player
+        for _, p in ipairs(Players:GetPlayers()) do
+            if p.Name == targetPlayerName or p.DisplayName == targetPlayerName then
+                player = p
+                break
+            end
+        end
+ 
+        if player and player.Character and player.Character:FindFirstChild("HumanoidRootPart") and teleportingPlayer.Character and teleportingPlayer.Character:FindFirstChild("HumanoidRootPart") then
+            local teleportPosition = player.Character.HumanoidRootPart.Position - player.Character.HumanoidRootPart.CFrame.LookVector * 3 + player.Character.HumanoidRootPart.CFrame.RightVector * 2
+            local teleportDirection = player.Character.HumanoidRootPart.CFrame.LookVector
+            teleportingPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(teleportPosition, teleportPosition + teleportDirection)
+        end
+    end
+end
