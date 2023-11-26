@@ -5,7 +5,7 @@ local Players = game:GetService("Players")
 local teleportingPlayer = Players.LocalPlayer
 local teleportEnabled = false
 local targetPlayerName = ""
- 
+
 local screenGui = Instance.new("ScreenGui")
 screenGui.Parent = teleportingPlayer:WaitForChild("PlayerGui")
  
